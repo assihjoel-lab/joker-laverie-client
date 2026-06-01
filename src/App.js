@@ -103,10 +103,48 @@ function Btn({ label,onClick,disabled,color="primary",small=false }){
 }
 
 // ─── PIN SCREEN ───────────────────────────────────────────
+
 function PinScreen({ onSuccess, correctPin }){
   const [pin,setPin]=useState("");
   const [err,setErr]=useState(false);
   const [shk,setShk]=useState(false);
+  const keys=["1","2","3","4","5","6","7","8","9","⌫","0","✓"];
+
+  function tryPin(p){
+    if(p===correctPin){ onSuccess(); }
+    else{ setErr(true);setShk(true); setTimeout(()=>{setPin("");setErr(false);setShk(false);},800); }
+  }
+  function press(k){
+    if(k==="⌫"){setPin(p=>p.slice(0,-1));return;}
+    if(k==="✓"){tryPin(pin);return;}
+    if(pin.length>=4) return;
+    const nx=pin+k; setPin(nx);
+    if(nx.length===4) setTimeout(()=>tryPin(nx),120);
+  }
+
+  return (
+    <div style={{padding:"40px 24px",textAlign:"center",animation:"fadeIn 0.4s ease"}}>
+      <Logo size={72} style={{margin:"0 auto 16px"}} />
+      <h2 style={{fontFamily:"'Bebas Neue',cursive",fontSize:22,letterSpacing:3,marginBottom:4}}>ESPACE GÉRANT</h2>
+      <p style={{color:"#8892B0",fontSize:13,marginBottom:28}}>PIN à 4 chiffres</p>
+      <div style={{animation:shk?"shake 0.4s ease":"none"}}>
+        <div style={{display:"flex",gap:14,justifyContent:"center",marginBottom:28}}>
+          {[0,1,2,3].map(i=><div key={i} style={{width:16,height:16,borderRadius:"50%",background:i<pin.length?(err?"#FF4444":BLU2):"transparent",border:`2px solid ${i<pin.length?(err?"#FF4444":BLU2):"#8892B0"}`,transition:"all 0.15s"}} />)}
+        </div>
+        <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:12,maxWidth:280,margin:"0 auto"}}>
+          {keys.map(k=>(
+            <button key={k} onClick={()=>press(k)} style={{background:k==="✓"?`linear-gradient(135deg,${BLU},${BLU2})`:k==="⌫"?"#1A2240":CARD,border:`1px solid ${BDR}`,borderRadius:18,padding:"18px",color:"#F8FAFF",fontSize:k==="✓"||k==="⌫"?20:22,fontWeight:700,cursor:"pointer"}}>{k}</button>
+          ))}
+        </div>
+      </div>
+      {err&&<p style={{color:"#FF4444",fontSize:13,marginTop:16,fontWeight:600}}>❌ PIN incorrect</p>}
+      <div style={{marginTop:24,background:CARD,borderRadius:14,padding:"12px 18px",border:`1px solid ${BDR}`,textAlign:"left"}}>
+        <p style={{color:"#8892B0",fontSize:11,marginBottom:4}}>PIN par défaut</p>
+        <p style={{color:BLU2,fontWeight:700,fontSize:18,letterSpacing:6}}>1 2 3 4</p>
+      </div>
+    </div>
+  );
+}
 
 function QRCode({ value, size=120 }){
   // Génère un QR code via API Google Charts (pas de lib externe)
@@ -1803,43 +1841,6 @@ function ClientSpace({ commandes,setCommandes,upsertCmd,upsertClient,clients,fri
 
 
 // ─── GÉNÉRATION FACTURE WHATSAPP ──────────────────────────
-function buildFacture(c, tarifs) {
-  const tarif  = tarifs.find(t=>t.id===c.tarifId)||{label:"Service",prix:c.tarif};
-  const pmt    = PAIEMENTS.find(p=>p.id===c.paiement)||{label:c.paiement||"—"};
-  const frais  = c.livraison ? LIVRAISON_TARIF : 0;
-  const sousT  = c.total - frais;
-  const sep    = "─────────────────────";
-  return [
-    `🃏 *JOKER LAVERIE & SERVICE*`,
-    `📍 Lomé, Togo`,
-    ``,
-    `🧾 *FACTURE / REÇU*`,
-    sep,
-    `🎫 N° : *${c.id}*`,
-    `📅 Date : ${c.date}`,
-    `👤 Client : *${c.client}*`,
-    c.tel ? `📞 Tél : ${c.tel}` : null,
-    sep,
-    ``,
-    `📋 *DÉTAIL*`,
-    `Service : ${tarif.label}`,
-    `Poids : ${c.poids} kg${c.poidsStatut==="estimated"?" (estimé)":""}`,
-    `Tarif : ${fmt(c.tarif)} FCFA/kg`,
-    `Sous-total : ${fmt(sousT)} FCFA`,
-    c.livraison ? `Livraison 🛵 : +${fmt(frais)} FCFA` : null,
-    ``,
-    sep,
-    `💰 *TOTAL : ${fmt(c.total)} FCFA*`,
-    `💳 Paiement : ${pmt.label}`,
-    `✅ Statut : ${c.paiementConfirme?"Payé ✅":"En attente"}`,
-    sep,
-    ``,
-    `🏅 Points gagnés : +${c.points} pts`,
-    ``,
-    `_Merci de votre confiance !_`,
-    `_JOKER Laverie — Propreté · Qualité · Fiabilité_`,
-  ].filter(l=>l!==null).join("\n");
-}
 
 export default function App(){
   const [commandes,  ,  , cmdReady]  = useFireCollection("commandes",  []);
