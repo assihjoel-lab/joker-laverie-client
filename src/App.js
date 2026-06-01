@@ -2,6 +2,9 @@ import { useState, useEffect } from "react";
 import { db } from "./firebase";
 import { useFireCollection, useFireDoc } from "./hooks";
 
+const JOKER_FLOOZ_DEFAULT  = "+22879621085";
+const JOKER_TMONEY_DEFAULT = "+22893643596";
+let JOKER_FLOOZ  = JOKER_FLOOZ_DEFAULT;
 let JOKER_TMONEY = JOKER_TMONEY_DEFAULT;
 const LIVRAISON_TARIF_DEFAULT = 500;
 let LIVRAISON_TARIF = LIVRAISON_TARIF_DEFAULT;
